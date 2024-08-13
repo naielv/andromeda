@@ -1,0 +1,178 @@
+version: "3"
+services:
+  gitea:
+    networks:
+      - gitea
+      - default
+    image: gitea/gitea:latest
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=mysql
+      - GITEA__database__HOST=giteadb:3306
+      - GITEA__database__NAME=gitea
+      - GITEA__database__USER=gitea
+      - GITEA__database__PASSWD=gitea
+    restart: always
+    volumes:
+      - /mnt/pve/cephfs/userdata/Homelab/auto/gitea/gitea:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - giteadb
+
+  giteadb:
+    networks:
+      - gitea
+    image: mysql:8
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=gitea
+      - MYSQL_USER=gitea
+      - MYSQL_PASSWORD=gitea
+      - MYSQL_DATABASE=gitea
+    volumes:
+      - /mnt/pve/cephfs/userdata/Homelab/auto/gitea/mysql:/var/lib/mysql
+  httpd:
+    volumes:
+      - /mnt/pve/cephfs/userdata/Homelab/auto/www:/usr/local/apache2/htdocs/
+    image: httpd:2.4
+  node-red:
+    networks:
+      - default
+    image: nodered/node-red:latest
+    environment:
+      - TZ=Europe/Madrid
+    ports:
+      - "1880:1880"
+    volumes:
+      - /mnt/pve/cephfs/userdata/Homelab/enode-red-data:/data
+  ersatztv:
+    environment:
+      - TZ=Europe/Madrid
+    ports:
+      - 8409:8409
+    volumes:
+      - /mnt/pve/cephfs/userdata/Homelab/ersatztv99:/root/.local/share/ersatztv
+    tmpfs:
+      - /root/.local/share/etv-transcode
+    restart: unless-stopped
+    image: jasongdove/ersatztv:latest-arm64
+  #  glance:
+  #    image: glanceapp/glance
+  #    networks:
+  #     - default
+  #    volumes:
+  #      - /mnt/pve/cephfs/userdata/Homelab/auto/glance.yml:/app/glance.yml
+  #      - /etc/timezone:/etc/timezone:ro
+  #      - /etc/localtime:/etc/localtime:ro
+  #    restart: unless-stopped
+  #    deploy:
+  #      labels:
+  #        - sablier.enable=true
+  #        - sablier.group=glancedash
+  homer:
+    image: b4bz/homer
+    networks:
+      - default
+    volumes:
+      - /mnt/pve/cephfs/userdata/Homelab/auto/homer/:/www/assets
+    user: 1000:1000 # default
+    environment:
+      - INIT_ASSETS=1 # default
+    deploy:
+      labels:
+        - sablier.enable=true
+        - sablier.group=homedash
+  jellyfin:
+    image: jellyfin/jellyfin
+    networks:
+      - default
+    user: 0:0 # UserID:GroupID
+    deploy:
+      labels:
+        - sablier.enable=true
+        - sablier.group=media
+    ports:
+      - 8096:8096
+    volumes:
+      - /mnt/pve/cephfs/userdata/Homelab/jellyfin3/config:/config
+      # - /mnt/pve/cephfs/userdata/Homelab/jellyfin3/cache:/cache
+      - /mnt/pve/cephfs/userdata/Media:/media
+      # - ./volumes/immich/fotos/library:/photos:ro
+    restart: "unless-stopped"
+  proxy:
+    image: fredkiss3/caddy-with-sablier:latest
+    networks:
+      - default
+      - unsafeproxy
+    ports:
+      - "8080:80"
+    volumes:
+      - /mnt/pve/cephfs/userdata/Homelab/auto/cast.html:/AXELWWW/cast.html
+      - /mnt/pve/cephfs/userdata/Homelab/auto/Caddyfile:/etc/caddy/Caddyfile:ro
+
+  whoami:
+    image: containous/whoami:v1.5.0
+    networks:
+      - default
+    deploy:
+      labels:
+        - sablier.enable=true
+        - sablier.group=demo
+
+  sablier:
+    image: acouvreur/sablier:1.7.0
+    command:
+      - start
+      - --provider.name=docker_swarm
+      - --strategy.dynamic.default-theme=theme1
+    networks:
+      - default
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "/mnt/pve/cephfs/userdata/Homelab/auto/theme1.html:/etc/sablier/themes/theme1.html"
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:latest
+    ports:
+      - 8123:8123
+    volumes:
+      - /mnt/pve/cephfs/userdata/Homelab/clhomeassistant/data:/config
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - default
+      - outside # Red "host"
+  webtop001:
+    image: lscr.io/linuxserver/webtop:latest
+    networks:
+      - unsafeproxy
+    security_opt:
+      - seccomp:unconfined #optional
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - SUBFOLDER=/webtop/001/ #optional
+      - TITLE=Webtop001 #optional
+    volumes:
+      - /mnt/pve/cephfs/userdata/Homelab/WEBTOPS/001:/config
+      - /mnt/pve/cephfs/userdata:/ARCHIVOS
+    devices:
+      - /dev/dri:/dev/dri #optional
+    shm_size: "1gb" #optional
+    restart: unless-stopped
+    deploy:
+      labels:
+        - sablier.enable=true
+        - sablier.group=webtop001
+networks:
+  outside:
+    external:
+      name: "host"
+  default:
+  unsafeproxy:
+  gitea:
