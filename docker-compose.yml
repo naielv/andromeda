@@ -24,7 +24,7 @@ services:
   giteadb:
     networks:
       - gitea
-    image: mysql:8
+    image: mysql:9
     restart: always
     environment:
       - MYSQL_ROOT_PASSWORD=gitea
