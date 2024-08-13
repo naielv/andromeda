@@ -146,6 +146,10 @@ services:
     networks:
       - default
       - outside # Red "host"
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == pve01
   webtop001:
     image: lscr.io/linuxserver/webtop:version-c1365d22
     networks:
