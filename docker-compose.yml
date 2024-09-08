@@ -85,7 +85,7 @@ services:
         - sablier.enable=true
         - sablier.group=homedash
   jellyfin:
-    image: jellyfin/jellyfin:10.9.9
+    image: jellyfin/jellyfin:10.9.11
     networks:
       - default
     user: 0:0 # UserID:GroupID
