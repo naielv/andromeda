@@ -122,7 +122,7 @@ services:
         - sablier.group=demo
 
   sablier:
-    image: acouvreur/sablier:1.7.0
+    image: acouvreur/sablier:1.8.0
     command:
       - start
       - --provider.name=docker_swarm
