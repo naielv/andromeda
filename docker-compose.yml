@@ -40,7 +40,7 @@ services:
   node-red:
     networks:
       - default
-    image: nodered/node-red:4.0.2
+    image: nodered/node-red:4.0.5
     environment:
       - TZ=Europe/Madrid
     ports:
