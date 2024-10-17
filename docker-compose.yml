@@ -72,7 +72,7 @@ services:
   #        - sablier.enable=true
   #        - sablier.group=glancedash
   homer:
-    image: b4bz/homer:v24.05.1
+    image: b4bz/homer:v24.10.1
     networks:
       - default
     volumes:
