@@ -137,7 +137,7 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "/mnt/pve/cephfs/userdata/Homelab/auto/theme1.html:/etc/sablier/themes/theme1.html"
   homeassistant:
-    image: ghcr.io/home-assistant/home-assistant:2024.8.1
+    image: ghcr.io/home-assistant/home-assistant:2024.10.3
     ports:
       - 8123:8123
     volumes:
